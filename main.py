@@ -57,6 +57,7 @@ class MediaPlayer(ttk.Frame):
         container = ttk.Frame(self)
         container.pack(fill=X, expand=YES)
         ttk.Style().configure('TButton', font="-size 14")
+
         btn_open_file = ttk.Button(
             master=container,
             text=Emoji.get('open file folder'),
@@ -66,27 +67,12 @@ class MediaPlayer(ttk.Frame):
         )
         btn_open_file.pack(side=LEFT, fill=X, expand=YES)
 
-        btn_save_result = ttk.Button(
+        btn_savepoints_img = ttk.Button(
             master=container,
-            text=Emoji.get('FLOPPY DISK'),
+            text=Emoji.get('MEMO'),
             padding=10,
         )
-        btn_save_result.pack(side=LEFT, fill=X, expand=YES)
-
-        btn_blur_img = ttk.Button(
-            master=container,
-            text=Emoji.get('YIN YANG'),
-            padding=10,
-            command= self.__average_filter_apply
-        )
-        btn_blur_img.pack(side=LEFT, fill=X, expand=YES)
-
-        btn_extract_img = ttk.Button(
-            master=container,
-            text=Emoji.get('MAGNET'),
-            padding=10,
-        )
-        btn_extract_img.pack(side=LEFT, fill=X, expand=YES)
+        btn_savepoints_img.pack(side=LEFT, fill=X, expand=YES)
 
         btn_previous = ttk.Button(
             master=container,
@@ -101,6 +87,28 @@ class MediaPlayer(ttk.Frame):
             padding=10,
         )
         btn_next.pack(side=LEFT, fill=X, expand=YES)
+
+        btn_blur_img = ttk.Button(
+            master=container,
+            text=Emoji.get('YIN YANG'),
+            padding=10,
+            command=self.__average_filter_apply
+        )
+        btn_blur_img.pack(side=LEFT, fill=X, expand=YES)
+
+        btn_extract_img = ttk.Button(
+            master=container,
+            text=Emoji.get('MAGNET'),
+            padding=10,
+        )
+        btn_extract_img.pack(side=LEFT, fill=X, expand=YES)
+
+        btn_save_result = ttk.Button(
+            master=container,
+            text=Emoji.get('FLOPPY DISK'),
+            padding=10,
+        )
+        btn_save_result.pack(side=LEFT, fill=X, expand=YES)
 
     def __average_filter_apply(self):
         if self.show_unshow == 0:

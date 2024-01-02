@@ -6,68 +6,84 @@ sys.path.append("..")
 from segment_anything import sam_model_registry, SamPredictor
 
 
-class SAM_content:
-    def __init__(self,img_path,device="cpu",model="vit_h",sam_checkpoint = "sam_vit_h_4b8939.pth"):
+class SAM:
+    def __init__(self,img_path: str,model_name:str, model_path:str,device:str):
+        self.image = cv2.imread(img_path)
+        self.paste_the_result = np.zeros(self.image.shape)
+
+        self.gray_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        self.__apply_sobel()
+
+        self.__change_all_img_to_rgb()
+        self.sam_checkpoint = model_path
+        self.model_type = model_name
+
+        self.device = device
+
+    def __apply_sobel(self):
+        ksize = 3
+        gX = cv2.Sobel(self.gray_image, ddepth=cv2.CV_32F, dx=1, dy=0, ksize=ksize)
+        gY = cv2.Sobel(self.gray_image, ddepth=cv2.CV_32F, dx=0, dy=1, ksize=ksize)
+
+        gX = cv2.convertScaleAbs(gX)
+        gY = cv2.convertScaleAbs(gY)
+        self.sobel_edge = cv2.addWeighted(gX, 0.5, gY, 0.5, 0)
+    def __change_all_img_to_rgb(self):
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+        self.sobel_edge = cv2.cvtColor(self.sobel_edge, cv2.COLOR_GRAY2RGB)
+        self.gray_image = cv2.cvtColor(self.gray_image, cv2.COLOR_GRAY2RGB)
+
+    def __show_mask(self,mask, ax, random_color=False):
+        if random_color:
+            color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
+        else:
+            color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
+        h, w = mask.shape[-2:]
+        mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
+        ax.imshow(mask_image)
 
 
-
-image = cv2.imread("image.jpg")
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-sam_checkpoint = "sam_vit_h_4b8939.pth"
-model_type = "vit_h"
-
-device = "cpu"
-
-
-def show_mask(mask, ax, random_color=False):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
-    h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-    ax.imshow(mask_image)
+    def __show_points(self,coords, labels, ax, marker_size=375):
+        pos_points = coords[labels == 1]
+        neg_points = coords[labels == 0]
+        ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white',
+                   linewidth=1.25)
+        ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white',
+                   linewidth=1.25)
 
 
-def show_points(coords, labels, ax, marker_size=375):
-    pos_points = coords[labels == 1]
-    neg_points = coords[labels == 0]
-    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
+    def __show_box(self,box, ax):
+        x0, y0 = box[0], box[1]
+        w, h = box[2] - box[0], box[3] - box[1]
+        ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0, 0, 0, 0), lw=2))
 
 
-def show_box(box, ax):
-    x0, y0 = box[0], box[1]
-    w, h = box[2] - box[0], box[3] - box[1]
-    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0, 0, 0, 0), lw=2))
+    def process_data(self,input_point):
+        sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
+        sam.to(device=self.device)
 
-sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-sam.to(device=device)
-
-predictor = SamPredictor(sam)
+        predictor = SamPredictor(sam)
 
 
-predictor.set_image(image)
+        predictor.set_image(self.image)
+
+        input_label = np.array([i for i in range(1,len(input_point)+1)])
 
 
+        masks, scores, logits = predictor.predict(
+            point_coords=input_point,
+            point_labels=input_label,
+            multimask_output=True,
+        )
+        rgb_gray_binary= [self.image,self.gray_image,self.sobel_edge]
 
-input_point = np.array([[500, 375]])
-input_label = np.array([1])
-
-
-masks, scores, logits = predictor.predict(
-    point_coords=input_point,
-    point_labels=input_label,
-    multimask_output=True,
-)
-for i, (mask, score) in enumerate(zip(masks, scores)):
-    plt.figure(figsize=(10,10))
-    plt.imshow(image)
-    show_mask(mask, plt.gca())
-    show_points(input_point, input_label, plt.gca())
-    plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
-    plt.axis('off')
-    plt.show()
-
+        for i, (mask, score) in enumerate(zip(masks, scores)):
+            plt.figure(figsize=(10,10))
+            plt.imshow(self.image)
+            self.__show_mask(mask, plt.gca())
+            self.__show_points(input_point, input_label, plt.gca())
+            plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
+            plt.axis('off')
+            plt.show()
+S = SAM("images.jpg","vit_h","sam_vit_h_4b8939.pth","cpu")
+S.process_data(np.array([[100,100],[200,140],[180,160]]))
