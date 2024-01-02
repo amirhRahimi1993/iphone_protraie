@@ -1,3 +1,4 @@
+import copy
 import sys
 import cv2
 import numpy as np
@@ -9,7 +10,8 @@ from segment_anything import sam_model_registry, SamPredictor
 class SAM:
     def __init__(self,img_path: str,model_name:str, model_path:str,device:str):
         self.image = cv2.imread(img_path)
-        self.paste_the_result = np.zeros(self.image.shape)
+        self.rgb_image = copy.deepcopy(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
+        self.image = copy.deepcopy(self.rgb_image)
 
         self.gray_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.__apply_sobel()
@@ -75,8 +77,23 @@ class SAM:
             point_labels=input_label,
             multimask_output=True,
         )
-        rgb_gray_binary= [self.image,self.gray_image,self.sobel_edge]
 
+        rgb_gray_binary= [self.rgb_image,self.gray_image,self.sobel_edge]
+        MASK = masks[-1]
+        for i,img1 in enumerate(rgb_gray_binary):
+            paste_the_result = np.zeros(self.image.shape)
+            indexes = np.where(MASK == True)
+            print("something intersting will happen")
+            paste_the_result[indexes] = copy.deepcopy(img1[indexes])
+            for j,img2 in enumerate(rgb_gray_binary):
+                if i==j:
+                    continue
+                indexes = np.where(MASK == False)
+                paste_the_result[indexes] = copy.deepcopy(img2[indexes])
+                paste_the_result = paste_the_result[..., ::-1]
+
+                cv2.imwrite(f"{i}_{j}.jpg",paste_the_result)
+    def __save_mask(self,masks,scores,input_point,input_label):
         for i, (mask, score) in enumerate(zip(masks, scores)):
             plt.figure(figsize=(10,10))
             plt.imshow(self.image)
@@ -85,5 +102,5 @@ class SAM:
             plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
             plt.axis('off')
             plt.show()
-S = SAM("images.jpg","vit_h","sam_vit_h_4b8939.pth","cpu")
-S.process_data(np.array([[100,100],[200,140],[180,160]]))
+S = SAM("img.jpg","vit_h","sam_vit_h_4b8939.pth","cpu")
+S.process_data(np.array([[400,280],[350,250]]))
