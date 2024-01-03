@@ -3,19 +3,23 @@
     Modified: 2021-12-11
     Adapted from: https://github.com/israel-dryer/Mini-VLC-Player
 """
-from pathlib import Path
 from tkinter import filedialog
 
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.icons import Emoji
-from PIL import Image, ImageTk
+from tkinter import messagebox
 
+from PIL import Image, ImageTk
+from SAM import SAM
 
 class MediaPlayer(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master)
+        self.x=-1
+        self.y=-1
+        self.coordination = []
         self.pack(fill=BOTH, expand=YES)
         self.hdr_var = ttk.StringVar()
         self.elapsed_var = ttk.DoubleVar(value=0)
@@ -48,9 +52,9 @@ class MediaPlayer(ttk.Frame):
 
     def on_image_click(self, event):
         # Get the x and y coordinates of the click relative to the image widget
-        x, y = event.x, event.y
-        self.hdr_var.set(f"Coordination you have clicked is {x} and {y}")
-        print(f"Clicked at x={x}, y={y}")
+        self.x, self.y = event.x, event.y
+        self.hdr_var.set(f"Coordination you have clicked is {self.x} and {self.y}")
+        print(f"Clicked at x={self.x}, y={self.y}")
 
     def create_buttonbox(self):
         """Create buttonbox with media controls"""
@@ -71,6 +75,7 @@ class MediaPlayer(ttk.Frame):
             master=container,
             text=Emoji.get('MEMO'),
             padding=10,
+            command = self.__store_point
         )
         btn_savepoints_img.pack(side=LEFT, fill=X, expand=YES)
 
@@ -110,6 +115,12 @@ class MediaPlayer(ttk.Frame):
         )
         btn_save_result.pack(side=LEFT, fill=X, expand=YES)
 
+    def __store_point(self):
+        if self.x == -1:
+            messagebox.showinfo("Error", "Cant find new point")
+            return
+        self.coordination.append([self.x,self.y])
+        self.x , self.y = -1,-1
     def __average_filter_apply(self):
         if self.show_unshow == 0:
             self.create_progress_meter()
@@ -136,6 +147,9 @@ class MediaPlayer(ttk.Frame):
 
         self.remain = ttk.Label(self.container, text='03:10')
         self.remain.pack(side=LEFT, fill=X, padx=10)
+
+    def call_uncle_SAM(self):
+
     def on_progress(self, val: float):
         """Update progress labels when the scale is updated."""
         elapsed = self.elapsed_var.get()

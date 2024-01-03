@@ -10,10 +10,10 @@ from segment_anything import sam_model_registry, SamPredictor
 class SAM:
     def __init__(self,img_path: str,model_name:str, model_path:str,device:str):
         self.image = cv2.imread(img_path)
+        self.gray_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.rgb_image = copy.deepcopy(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         self.image = copy.deepcopy(self.rgb_image)
 
-        self.gray_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.__apply_sobel()
 
         self.__change_all_img_to_rgb()
