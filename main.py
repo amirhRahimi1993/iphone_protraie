@@ -17,6 +17,7 @@ class MediaPlayer(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master)
+        self.image_path= ""
         self.x=-1
         self.y=-1
         self.coordination = []
@@ -78,6 +79,15 @@ class MediaPlayer(ttk.Frame):
             command = self.__store_point
         )
         btn_savepoints_img.pack(side=LEFT, fill=X, expand=YES)
+
+        btn_process_the_image = ttk.Button(
+            master=container,
+            text= "apply processing",
+            padding=10,
+            style='success.TButton',
+            command=self.call_uncle_SAM()
+        )
+        btn_process_the_image.pack(side=LEFT, fill=X, expand=YES)
 
         btn_previous = ttk.Button(
             master=container,
@@ -149,6 +159,8 @@ class MediaPlayer(ttk.Frame):
         self.remain.pack(side=LEFT, fill=X, padx=10)
 
     def call_uncle_SAM(self):
+        s = SAM(self.image_path,"vit_h","sam_vit_h_4b8939.pth","cpu")
+        return s.process_data(self.coordination)
 
     def on_progress(self, val: float):
         """Update progress labels when the scale is updated."""
@@ -186,6 +198,7 @@ class MediaPlayer(ttk.Frame):
             # Display the resized image
             self.media.configure(image=new_media)
             self.media.image = new_media  # Keep a reference to avoid garbage collection
+            self.image_path = file_path
 
 
 
