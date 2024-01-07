@@ -12,11 +12,17 @@ from tkinter import messagebox
 
 from PIL import Image, ImageTk
 from SAM import SAM
+import numpy as np
 
 class MediaPlayer(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master)
+        self.one_d_twod = None
+        self.media = None
+        self.demo_media = None
+        self.processed_image = None
+        self.counter = 0
         self.image_path= ""
         self.x=-1
         self.y=-1
@@ -85,7 +91,7 @@ class MediaPlayer(ttk.Frame):
             text= "apply processing",
             padding=10,
             style='success.TButton',
-            command=self.call_uncle_SAM()
+            command=self.call_uncle_SAM
         )
         btn_process_the_image.pack(side=LEFT, fill=X, expand=YES)
 
@@ -93,6 +99,7 @@ class MediaPlayer(ttk.Frame):
             master=container,
             text=Emoji.get('BLACK LEFT-POINTING TRIANGLE'),
             padding=10,
+            command= lambda: self.__create_image(-1)
         )
         btn_previous.pack(side=LEFT, fill=X, expand=YES)
 
@@ -100,6 +107,7 @@ class MediaPlayer(ttk.Frame):
             master=container,
             text=Emoji.get('BLACK RIGHT-POINTING TRIANGLE'),
             padding=10,
+            command=lambda: self.__create_image(1)
         )
         btn_next.pack(side=LEFT, fill=X, expand=YES)
 
@@ -158,9 +166,35 @@ class MediaPlayer(ttk.Frame):
         self.remain = ttk.Label(self.container, text='03:10')
         self.remain.pack(side=LEFT, fill=X, padx=10)
 
-    def call_uncle_SAM(self):
+    def call_uncle_SAM(self)->dict:
         s = SAM(self.image_path,"vit_h","sam_vit_h_4b8939.pth","cpu")
-        return s.process_data(self.coordination)
+        self.processed_image = s.process_data(self.coordination)
+        self.one_d_twod = []
+        for k in self.processed_image.keys():
+            if k == 'mask':
+                continue
+            for k1 in self.processed_image.keys():
+                if k1 == k or k1=='mask':
+                    continue
+                for i in range(3):
+                    self.one_d_twod.append(f"{k}^^{k1}^^{i}")
+        return self.processed_image
+    def __putpixel(self,mask_true,key,mask_number):
+
+        print(f"len of the mask {len(self.processed_image['mask'])}")
+        self.img[np.where(self.processed_image['mask'][-1] == mask_true)] = self.processed_image[key][
+            np.where(self.processed_image['mask'][-1] == mask_true)]
+    def __create_image(self,move):
+        self.counter += move
+        self.counter = self.counter % len(self.one_d_twod)
+        key_a,key_b,mask_number = self.one_d_twod[self.counter].split("^^")
+        mask_number = int(mask_number)
+        self.img= np.zeros(self.processed_image[key_a].shape)
+        self.__putpixel(True,key_a,mask_number)
+        self.__putpixel(False, key_b, mask_number)
+        img = Image.fromarray(np.uint8(self.img))
+        self.__set_image(img)
+
 
     def on_progress(self, val: float):
         """Update progress labels when the scale is updated."""
@@ -191,14 +225,15 @@ class MediaPlayer(ttk.Frame):
         if file_path:
             # Load the image using PIL
             image = Image.open(file_path)
-            # Resize the image to 1024x768
-            image = image.resize((1024, 768))
-            # Convert the image for Tkinter
-            new_media = ImageTk.PhotoImage(image)
-            # Display the resized image
-            self.media.configure(image=new_media)
-            self.media.image = new_media  # Keep a reference to avoid garbage collection
+            self.__set_image(image)
             self.image_path = file_path
+    def __set_image(self,image):
+        image = image.resize((1024, 768))
+        # Convert the image for Tkinter
+        new_media = ImageTk.PhotoImage(image)
+        # Display the resized image
+        self.media.configure(image=new_media)
+        self.media.image = new_media  # Keep a reference to avoid garbage collection
 
 
 

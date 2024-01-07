@@ -74,7 +74,7 @@ class SAM:
 
 
         masks, scores, logits = predictor.predict(
-            point_coords=input_point,
+            point_coords=np.asarray(input_point),
             point_labels=input_label,
             multimask_output=True,
         )
