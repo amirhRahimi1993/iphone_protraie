@@ -19,7 +19,7 @@ import numpy as np
 import os
 from datetime import datetime
 
-class MediaPlayer(ttk.Frame):
+class AIEffect(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master)
@@ -32,7 +32,7 @@ class MediaPlayer(ttk.Frame):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = "vit_h"
         self.model_path = "sam_vit_h_4b8939.pth"
-        self.SIZE= (1024, 768)
+        self.SIZE= (650, 400)
         self.counter = 0
         self.mask_number =2
         self.image_path= ""
@@ -319,7 +319,7 @@ class MediaPlayer(ttk.Frame):
 
 if __name__ == '__main__':
 
-    app = ttk.Window("Media Player", "yeti")
-    mp = MediaPlayer(app)
+    app = ttk.Window("AI Effect", "yeti")
+    mp = AIEffect(app)
     #mp.scale.set(0.35)  # set default
     app.mainloop()
