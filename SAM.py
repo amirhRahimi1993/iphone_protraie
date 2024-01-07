@@ -8,9 +8,9 @@ from segment_anything import sam_model_registry, SamPredictor
 
 
 class SAM:
-    def __init__(self,img_path: str,model_name:str, model_path:str,device:str):
+    def __init__(self,img_path: str,model_name:str, model_path:str,device:str,size:tuple):
         self.results = {}
-        self.image = cv2.imread(img_path)
+        self.image = cv2.resize(cv2.imread(img_path),size)
         self.gray_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.rgb_image = copy.deepcopy(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         self.image = copy.deepcopy(self.rgb_image)
@@ -79,7 +79,7 @@ class SAM:
             multimask_output=True,
         )
 
-        rgb_gray_binary= {"rbg":self.rgb_image,"gray":self.gray_image,"sobel":self.sobel_edge,"empty":np.zeros(self.image.shape),"mask":masks}
+        rgb_gray_binary= {"rgb":self.rgb_image,"gray":self.gray_image,"sobel":self.sobel_edge,"empty":np.zeros(self.image.shape),"mask":masks}
         return rgb_gray_binary
 
     def __save_mask(self,masks,scores,input_point,input_label):
