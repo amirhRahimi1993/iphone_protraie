@@ -19,7 +19,7 @@ import numpy as np
 import os
 from datetime import datetime
 
-class AIEffect(ttk.Frame):
+class Filter_image(ttk.Frame):
 
     def __init__(self, master):
         super().__init__(master)
@@ -32,7 +32,7 @@ class AIEffect(ttk.Frame):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = "vit_h"
         self.model_path = "sam_vit_h_4b8939.pth"
-        self.SIZE= (650, 400)
+        self.SIZE= (1024, 768)
         self.counter = 0
         self.mask_number =2
         self.image_path= ""
@@ -61,8 +61,10 @@ class AIEffect(ttk.Frame):
 
     def create_media_window(self):
         """Create frame to contain media"""
-        img_path = 'SAME_100000566__tbo_11___100000566__hb_35.png'
-        self.demo_media = ttk.PhotoImage(file=img_path)
+
+        img_path = 'background.jpg'
+        image = Image.open(img_path).resize(self.SIZE)
+        self.demo_media = ImageTk.PhotoImage(image)
         self.media = ttk.Label(self, image=self.demo_media)
         self.media.pack(fill=BOTH, expand=YES)
 
@@ -319,7 +321,7 @@ class AIEffect(ttk.Frame):
 
 if __name__ == '__main__':
 
-    app = ttk.Window("AI Effect", "yeti")
-    mp = AIEffect(app)
+    app = ttk.Window("Filter Image by SAM", "yeti")
+    mp = Filter_image(app)
     #mp.scale.set(0.35)  # set default
     app.mainloop()
