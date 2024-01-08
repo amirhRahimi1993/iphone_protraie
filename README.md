@@ -1,4 +1,4 @@
-# Image Filtering Using SAM
+# Background extraction, iPhone portrait simulation Using SAM
 
 In this free open source project, you can easily eliminate background, blur background (like portrait), and use other filters. I have used SAM (Segment Anything Model) to extract objects and for UI, I have used ttkbootstrap. It is cross-platform, therefore, you can easily use it on any OS. This is the output of application. In the left most you see original image and others are processed one.
 
