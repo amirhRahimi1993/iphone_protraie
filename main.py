@@ -97,8 +97,13 @@ class Filter_image(ttk.Frame):
         row2 = ttk.Frame(container)
         row2.pack(fill=X, expand=YES)
 
-        btn_process_the_image = ttk.Button(row2, text="Process Image", padding=10, style='success.TButton', command=self.call_uncle_SAM)
-        btn_process_the_image.pack(fill=X, expand=YES)
+        btn_process_the_image = ttk.Button(row2, text="Process Image", padding=10, style='success.TButton',
+                                           command=self.call_uncle_SAM)
+        btn_process_the_image.pack(side=LEFT, fill=X, expand=YES)
+
+        btn_delete_the_image = ttk.Button(row2, text="Delete", padding=10, style='danger.TButton',
+                                          command=self.__delete_all)
+        btn_delete_the_image.pack(side=LEFT, fill=X, expand=YES)
 
         # Third row (initially hidden)
         self.row3 = ttk.Frame(container)
@@ -108,10 +113,9 @@ class Filter_image(ttk.Frame):
         # Add other buttons and dropdown to the third row
         self.create_third_row_buttons(self.row3)
 
-    def reveal_third_row(self):
-        """Reveal the third row with a fade-in effect"""
-        self.row3.pack(fill=X, expand=YES)
-        # Add fade-in effect if needed
+    def __delete_all(self):
+        self.processed_image= None
+        self.coordination.clear()
 
     def create_third_row_buttons(self, parent):
 
